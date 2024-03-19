@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+    <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+    <title>운세 보는 바오</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .chat-title {
+             background-color: #0078D7;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+/* Rest of your CSS stays the same */
+
+
+        .chat-bubble {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+
+        .user-bubble {
+            background-color: #e2f7fd;
+            text-align: right;
+        }
+
+        .bot-bubble {
+            background-color: #f1f1f1;
+            text-align: left;
+        }       
+
+
+        .chat-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .chat-box {
+            height: 350px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .send-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .intro-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .intro-container img {
+            width: 50%;
+            min-width: 300px;
+        }
+
+        #loader{
+            font-size:25px;
+            text-align:center;
+        }
+        
+        .kakao-ad{
+            display:flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            min-width: 350px;
+            min-height: 200px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="intro" class="intro-container">
+        <h1>운세를 알려드립니다.</h1>
+        <img src="bao.jpeg" alt="chatbao">
+        <label for="date">생년월일</label>
+        <input id="date" type="text">
+        <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+        <label for="hour">태어난 시간</label>
+        <select name="hours" id="hour">
+            <option value="">모름</option>
+            <option value="00">00</option>
+            <option value="01">01</option>
+            <option value="02">02</option>
+            <option value="03">03</option>
+            <option value="04">04</option>
+            <option value="05">05</option>
+            <option value="06">06</option>
+            <option value="07">07</option>
+            <option value="08">08</option>
+            <option value="09">09</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18</option>
+            <option value="19">19</option>
+            <option value="20">20</option>
+            <option value="21">21</option>
+            <option value="22">22</option>
+            <option value="23">23</option>
+            <option value="24">24</option>
+          </select>
+          <button onclick="start()">오늘의 운세 보기</button>
+    </div>
+
+    <div id="chat" class="chat-container" style="display: none;">
+        <div class="chat-title">운세 보는 바오</div>
+        <div class="chat-bubble user-bubble">
+            안녕하세요! 운세를 확인해주세요.
+        </div>
+        <div class="chat-bubble bot-bubble" id="fortuneResponse">
+        </div>
+        <div id="loader" class="loader" style="display:none;">
+            <i class="loading-icon fas fa-spinner fa-spin"></i>
+        </div>
+        <input type="text" class="chat-input" id="messageInput" placeholder="메세지를 입력하세요...">
+        <button class="send-button" onclick="sendMessage()">보내기</button>
+    </div>
+
+    <div id="kakao-ad">
+        <ins class="kakao_ad_area" style="display:none;"
+        data-ad-unit = "DAN-ND2zQzTwIQXWaqsS"
+        data-ad-width = "320"
+        data-ad-height = "100"></ins>
+        <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
+    </div>
+    <script>
+        const picker = new Pikaday({ field: document.getElementById('date'),yearRange:[1940,2024]});
+        let userMessages = [];
+        let assistantMessages = [];
+        let myDateTime = [];
+
+        function start(){
+            const date=document.getElementById('date').value;
+            const hour=document.getElementById('hour').value;
+            if(date===''){
+                alert('생년월일을 입력해 주세요.');
+                return;
+            }
+            myDateTime=date+hour;
+            console.log(myDateTime)
+
+            document.getElementById("intro").style.display="none";
+            document.getElementById("chat").style.display="block";
+        }
+
+        async function sendMessage() {
+
+        document.getElementById('loader').style.display='block';
+    //사용자의 메시지 가져옴
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value;
+
+    //채팅 말풍선에 사용자의 메시지 출력
+        const userBubble = document.createElement('div');
+        userBubble.className = 'chat-bubble user-bubble';
+        userBubble.textContent = message;
+        document.getElementById('fortuneResponse').appendChild(userBubble);
+
+    //Push
+         userMessages.push(messageInput.value);
+
+    //입력 필드 초기화
+        messageInput.value = '';
+
+    //백엔드 서버에 메시지를 보내고 응답 출력
+        try {
+            const response = await fetch('.', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userMessages: userMessages,
+                    assistantMessages: assistantMessages,
+                    myDateTime: myDateTime,
+                })
+            });
+
+        if (!response.ok) {
+            throw new Error('Request failed with status ' + response.status);
+        }
+
+        const data = await response.json();
+
+        document.getElementById('loader').style.display="none";
+        //Push
+        assistantMessages.push(data.assistant);
+        console.log('Response:', data);
+
+        //채팅 말풍선에 챗GPT 응답 출력
+        const botBubble = document.createElement('div');
+        botBubble.className = 'chat-bubble bot-bubble';
+        botBubble.textContent = data.assistant;
+        document.getElementById('fortuneResponse').appendChild(botBubble);
+
+        //후원링크 삽입
+        const p=document.createElement('p');
+        p.innerHTML='추가로 링크를 눌러 작은 정성 베풀어 주시면 더욱 좋은 운이 잇을 겁니다.=>';
+        const link=document.createElement('a')
+        link.href='.';
+        link.innerHTML='복채 보내기'
+        p.appendChild(link);
+        botBubble.appendChild(p);
+
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+    </script>
+
+</body>
+</html>
